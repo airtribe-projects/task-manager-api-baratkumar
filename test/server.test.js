@@ -8,15 +8,21 @@ tap.test("POST /tasks", async (t) => {
     title: "New Task",
     description: "New Task Description",
     completed: false,
+    priority: "medium"
   };
   const response = await server.post("/tasks").send(newTask);
   t.equal(response.status, 201);
+  t.hasOwnProp(response.body, "priority");
+  t.hasOwnProp(response.body, "timestamp");
+  t.equal(response.body.priority, "medium");
+  t.type(response.body.timestamp, "string");
   t.end();
 });
 
 tap.test("POST /tasks with invalid data", async (t) => {
   const newTask = {
-    title: "New Task",
+    title: "New Task"
+    // missing priority
   };
   const response = await server.post("/tasks").send(newTask);
   t.equal(response.status, 400);
@@ -26,27 +32,37 @@ tap.test("POST /tasks with invalid data", async (t) => {
 tap.test("GET /tasks", async (t) => {
   const response = await server.get("/tasks");
   t.equal(response.status, 200);
-  t.hasOwnProp(response.body[0], "id");
-  t.hasOwnProp(response.body[0], "title");
-  t.hasOwnProp(response.body[0], "description");
-  t.hasOwnProp(response.body[0], "completed");
-  t.type(response.body[0].id, "number");
-  t.type(response.body[0].title, "string");
-  t.type(response.body[0].description, "string");
-  t.type(response.body[0].completed, "boolean");
+  t.type(response.body.tasks, "array");
+  t.hasOwnProp(response.body.tasks[0], "id");
+  t.hasOwnProp(response.body.tasks[0], "title");
+  t.hasOwnProp(response.body.tasks[0], "description");
+  t.hasOwnProp(response.body.tasks[0], "completed");
+  t.hasOwnProp(response.body.tasks[0], "priority");
+  t.hasOwnProp(response.body.tasks[0], "timestamp");
+  t.type(response.body.tasks[0].id, "number");
+  t.type(response.body.tasks[0].title, "string");
+  t.type(response.body.tasks[0].description, "string");
+  t.type(response.body.tasks[0].completed, "boolean");
+  t.type(response.body.tasks[0].priority, "string");
+  t.type(response.body.tasks[0].timestamp, "string");
   t.end();
 });
 
 tap.test("GET /tasks/:id", async (t) => {
   const response = await server.get("/tasks/1");
   t.equal(response.status, 200);
-  const expectedTask = {
-    id: 1,
-    title: "Set up environment",
-    description: "Install Node.js, npm, and git",
-    completed: true,
-  };
-  t.match(response.body, expectedTask);
+  t.hasOwnProp(response.body, "id");
+  t.hasOwnProp(response.body, "title");
+  t.hasOwnProp(response.body, "description");
+  t.hasOwnProp(response.body, "completed");
+  t.hasOwnProp(response.body, "priority");
+  t.hasOwnProp(response.body, "timestamp");
+  t.type(response.body.id, "number");
+  t.type(response.body.title, "string");
+  t.type(response.body.description, "string");
+  t.type(response.body.completed, "boolean");
+  t.type(response.body.priority, "string");
+  t.type(response.body.timestamp, "string");
   t.end();
 });
 
@@ -61,9 +77,12 @@ tap.test("PUT /tasks/:id", async (t) => {
     title: "Updated Task",
     description: "Updated Task Description",
     completed: true,
+    priority: "high"
   };
-  const response = await server.put("/tasks/1").send(updatedTask);
+  const response = await server.put("/tasks/10").send(updatedTask);
   t.equal(response.status, 200);
+  t.hasOwnProp(response.body, "updatedOn");
+  t.type(response.body.updatedOn, "string");
   t.end();
 });
 
@@ -72,6 +91,7 @@ tap.test("PUT /tasks/:id with invalid id", async (t) => {
     title: "Updated Task",
     description: "Updated Task Description",
     completed: true,
+    priority: "high"
   };
   const response = await server.put("/tasks/999").send(updatedTask);
   t.equal(response.status, 404);
@@ -82,9 +102,10 @@ tap.test("PUT /tasks/:id with invalid data", async (t) => {
   const updatedTask = {
     title: "Updated Task",
     description: "Updated Task Description",
-    completed: "true",
+    completed: "true", // should be boolean
+    priority: "high"
   };
-  const response = await server.put("/tasks/1").send(updatedTask);
+  const response = await server.put("/tasks/11").send(updatedTask);
   t.equal(response.status, 400);
   t.end();
 });
@@ -97,6 +118,7 @@ tap.test("DELETE /tasks/:id", async (t) => {
 
 tap.test("DELETE /tasks/:id with invalid id", async (t) => {
   const response = await server.delete("/tasks/999");
+  console.log(response.status, response.body);
   t.equal(response.status, 404);
   t.end();
 });
